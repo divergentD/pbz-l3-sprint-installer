@@ -1,0 +1,24 @@
+本分发包的组成和来源
+
+本包只包含我们编写的安装器、专用 Lua 入口与键位配置。
+PBZControllerCustomizer 的 catalog.lua、compat.lua、logic.lua、runtime.lua、
+sprint_recovery.lua 不在本分发包里。安装时从接收者自行下载的原始完整 ZIP
+或接收者已经安装且校验一致的本机副本读取这些文件。
+
+PBZControllerCustomizer 2.1
+  作者：Sherkirito
+  https://www.nexusmods.com/phantombladezero/mods/112
+  作者页面列有单独的上传、修改和资产使用限制。
+  本安装器未取得将这些原文件再打包发布的许可，因此不包含它们。
+  下载原件、访问账号及相应网站条款由接收者自行处理。
+
+UE4SS 适配包
+  发布者适配包：KintaroModding
+  https://github.com/KintaroModding/ue4ss/releases/tag/v3.0.1-1195-g1ceefac8
+  上游：UE4SS-RE/RE-UE4SS
+  https://github.com/UE4SS-RE/RE-UE4SS
+  未嵌入加载器二进制。安装器会按需从发布者 GitHub 下载固定版本，
+  保留其 LICENSE 并校验文件。上游 UE4SS 采用 MIT 许可。
+
+本安装器、专用 main.lua 和 settings.lua 的许可见 LICENSE.txt。
+不对游戏或第三方框架授予额外权限。

@@ -1,0 +1,14 @@
+/build/
+/dist/
+/dependencies/
+/backups/
+*.sav
+*.log
+*.user
+*.suo
+report.json
+installation.json
+loader-installation.json
+__pycache__/
+.DS_Store
+Thumbs.db

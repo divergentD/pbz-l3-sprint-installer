@@ -1,0 +1,56 @@
+{
+  "version": "1.1.0",
+  "checked_at": "2026-11-03T00:55:59.452232+08:00",
+  "checks_passed": 31,
+  "installer": {
+    "passed": true,
+    "checks": 26,
+    "results": [
+      "fresh install creates own entry point",
+      "loader files match publisher hashes",
+      "fresh install leaves binary SAV identical",
+      "input backup matches original bytes",
+      "example and cheat mods are not installed",
+      "failed update is rejected",
+      "rollback restores previous mod",
+      "rollback preserves mods.txt byte-for-byte",
+      "update backs up previous owned mod",
+      "update keeps exactly one enable entry",
+      "unrelated mod entries and comments survive update",
+      "uninstall moves owned mod and dependency out of active locations",
+      "uninstall is reversible",
+      "uninstall retains shared loader and other mods",
+      "update and uninstall leave original SAV identical",
+      "fresh-install failure triggers rollback",
+      "failed fresh install leaves no active loader or partial mod",
+      "foreign same-name mod is never overwritten",
+      "foreign mod remains unchanged",
+      "modified dependency is rejected before installation",
+      "corrupt loader archive is rejected",
+      "invalid inputs create no game files",
+      "unsupported game executable is rejected",
+      "paths outside selected game root are rejected",
+      "ZIP importer reads only five named dependency files",
+      "executable embeds only our two Lua files; no third-party framework"
+    ],
+    "game_installation_changed": false,
+    "network_used": false
+  },
+  "lua": {
+    "passed": true,
+    "checks": 5,
+    "results": [
+      "both distributed Lua sources compile with Lua 5.4",
+      "seven intended gamepad actions explicitly configured; other attacks, keyboard and menus untouched",
+      "R3 tap/hold share the tested non-overlapping 0.5-second boundary",
+      "separate dependency directory resolves correctly and the bootstrap passes its actual configuration to the adapter",
+      "temporary handoff configuration is cleared after loading"
+    ],
+    "physical_controller_tested": false,
+    "v1_1_live_game_tested": false
+  },
+  "portable_source_rebuild_passed": true,
+  "chinese_ui_visually_checked": true,
+  "physical_controller_acceptance_complete": false,
+  "current_game_installation_modified": false
+}
