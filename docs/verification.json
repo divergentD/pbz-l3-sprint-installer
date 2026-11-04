@@ -1,6 +1,6 @@
 {
   "version": "1.2.0",
-  "checked_at": "2026-11-04T23:06:45.4568858+08:00",
+  "checked_at": "2026-11-04T23:33:26.6753971+08:00",
   "checks_passed": 51,
   "supported_builds": [
     "26266538",
@@ -111,6 +111,26 @@
     "read_only": true
   },
   "physical_controller_acceptance_complete": false,
-  "current_game_installation_modified": false,
-  "live_game_mapping_verified": false
+  "current_game_installation_modified": true,
+  "live_game_mapping_verified": true,
+  "live_game": {
+    "build": "26367565",
+    "mod_version": "1.2.0",
+    "existing_configuration": "legacy three-action locomotion profile; combat bindings inherited",
+    "startup_verified": true,
+    "loaded_existing_save": true,
+    "effective_modes_match": true,
+    "sprint_native_state_and_action_timestamps_verified": true,
+    "startup_or_runtime_error": false,
+    "physical_controller_tested": false,
+    "installer_preserved_settings_sav_and_exe": true,
+    "evidence": [
+      "v1.2.0 ready; verified Steam build 26367565",
+      "IA_Sprint off: both active rows match",
+      "IA_SprintSwitch press: Gamepad_LeftThumbstick; live_rows=1; live_matches=true",
+      "IA_LockTarget tap: Gamepad_RightThumbstick; threshold=0.49999; live_rows=1; live_matches=true",
+      "IA_Crouch hold: Gamepad_RightThumbstick; threshold=0.5; live_rows=1; live_matches=true",
+      "Sprint recovery: live player state and action timestamps verified"
+    ]
+  }
 }
