@@ -1,11 +1,20 @@
 {
-  "version": "1.1.0",
-  "checked_at": "2026-11-03T00:55:59.452232+08:00",
-  "checks_passed": 31,
+  "version": "1.2.0",
+  "checked_at": "2026-11-04T23:06:45.4568858+08:00",
+  "checks_passed": 51,
+  "supported_builds": [
+    "26266538",
+    "26367565"
+  ],
   "installer": {
     "passed": true,
-    "checks": 26,
+    "checks": 34,
     "results": [
+      "both supported native build profiles are embedded",
+      "C# verifier accepts all four Lua guard spans for build 26266538",
+      "same-size modified code is rejected for build 26266538",
+      "C# verifier accepts all four Lua guard spans for build 26367565",
+      "same-size modified code is rejected for build 26367565",
       "fresh install creates own entry point",
       "loader files match publisher hashes",
       "fresh install leaves binary SAV identical",
@@ -14,6 +23,9 @@
       "failed update is rejected",
       "rollback restores previous mod",
       "rollback preserves mods.txt byte-for-byte",
+      "rollback preserves existing personal configuration",
+      "update preserves existing personal configuration byte-for-byte",
+      "update installs the guarded dual-build compatibility module",
       "update backs up previous owned mod",
       "update keeps exactly one enable entry",
       "unrelated mod entries and comments survive update",
@@ -31,26 +43,74 @@
       "unsupported game executable is rejected",
       "paths outside selected game root are rejected",
       "ZIP importer reads only five named dependency files",
-      "executable embeds only our two Lua files; no third-party framework"
+      "executable embeds only our three Lua files; no third-party framework"
     ],
     "game_installation_changed": false,
     "network_used": false
   },
   "lua": {
     "passed": true,
-    "checks": 5,
+    "checks": 17,
     "results": [
-      "both distributed Lua sources compile with Lua 5.4",
-      "seven intended gamepad actions explicitly configured; other attacks, keyboard and menus untouched",
-      "R3 tap/hold share the tested non-overlapping 0.5-second boundary",
-      "separate dependency directory resolves correctly and the bootstrap passes its actual configuration to the adapter",
-      "temporary handoff configuration is cleared after loading"
+      "two explicit native profiles; unknown builds have no fallback",
+      "all distributed Lua files compile for build 26266538",
+      "Lua checks all four exact native spans for build 26266538",
+      "real pinned runtime boots with seven intended actions on build 26266538",
+      "deferred original recovery receives the new verifier and verified 0x4c6 field on build 26266538",
+      "altering any native span stops before runtime or mapping changes on build 26266538",
+      "all distributed Lua files compile for build 26367565",
+      "Lua checks all four exact native spans for build 26367565",
+      "real pinned runtime boots with seven intended actions on build 26367565",
+      "deferred original recovery receives the new verifier and verified 0x4c6 field on build 26367565",
+      "altering any native span stops before runtime or mapping changes on build 26367565",
+      "legacy three-action configuration boots while inheriting all combat bindings",
+      "runtime initialization failure clears handoff and preserves shared globals",
+      "R3 hold/tap retain the non-overlapping 0.5 second boundary",
+      "unknown build stops before input changes",
+      "all five restricted dependency files remain byte-for-byte unchanged",
+      "read-only guard verification passes against actual build 26367565 executable"
     ],
     "physical_controller_tested": false,
-    "v1_1_live_game_tested": false
+    "live_mapping_tested": false
   },
-  "portable_source_rebuild_passed": true,
-  "chinese_ui_visually_checked": true,
+  "native": {
+    "checked_build": "26367565",
+    "exe_size": 498913272,
+    "exe_sha256": "4415933ce33476f14c837abb61a1b60af8b78cd81783896501913a7aac69e423",
+    "native_toggle_field": "0x4c6",
+    "comparisons": [
+      {
+        "old_offset": 98340640,
+        "new_offset": 98639376,
+        "bytes": 355,
+        "instructions": 78,
+        "same_instructions_except_relative_addresses": true
+      },
+      {
+        "old_offset": 98341008,
+        "new_offset": 98639744,
+        "bytes": 42,
+        "instructions": 7,
+        "same_instructions_except_relative_addresses": true
+      },
+      {
+        "old_offset": 98338688,
+        "new_offset": 98637424,
+        "bytes": 100,
+        "instructions": 28,
+        "same_instructions_except_relative_addresses": true
+      },
+      {
+        "old_offset": 98340528,
+        "new_offset": 98639264,
+        "bytes": 105,
+        "instructions": 23,
+        "same_instructions_except_relative_addresses": true
+      }
+    ],
+    "read_only": true
+  },
   "physical_controller_acceptance_complete": false,
-  "current_game_installation_modified": false
+  "current_game_installation_modified": false,
+  "live_game_mapping_verified": false
 }

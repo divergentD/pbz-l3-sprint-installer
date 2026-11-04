@@ -1,6 +1,6 @@
 本分发包的组成和来源
 
-本包只包含我们编写的安装器、专用 Lua 入口与键位配置。
+本包只包含我们编写的安装器、专用 Lua 入口、版本校验器与键位配置。
 PBZControllerCustomizer 的 catalog.lua、compat.lua、logic.lua、runtime.lua、
 sprint_recovery.lua 不在本分发包里。安装时从接收者自行下载的原始完整 ZIP
 或接收者已经安装且校验一致的本机副本读取这些文件。
@@ -20,5 +20,10 @@ UE4SS 适配包
   未嵌入加载器二进制。安装器会按需从发布者 GitHub 下载固定版本，
   保留其 LICENSE 并校验文件。上游 UE4SS 采用 MIT 许可。
 
-本安装器、专用 main.lua 和 settings.lua 的许可见 LICENSE.txt。
+1.2 的 native_guard.lua 仅核验游戏中与冲刺状态有关的短代码片段，
+并给本机原件的导出表提供版本校验函数。runtime.lua 在独立的 Lua
+环境中载入，延迟回调也使用该环境；不改写原件或其他 Mod 的 dofile。
+原作者的输入、状态修复和回滚实现仍从使用者的本机原件加载。
+
+本安装器和自有 payload Lua 文件的许可见 LICENSE.txt。
 不对游戏或第三方框架授予额外权限。

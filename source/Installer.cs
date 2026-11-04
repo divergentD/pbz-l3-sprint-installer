@@ -37,7 +37,7 @@ namespace PBZL3Installer {
             if(!Directory.Exists(root) || !File.Exists(Path.Combine(root,@"platform\steam\PBZ.exe"))) throw new IOException("请选择 PBZ 游戏根目录，其中应有 platform\\steam\\PBZ.exe。");
             if(checkBuild && !test) {
                 if(root.Any(c=>c>127)) throw new IOException("当前框架要求游戏路径仅含英文字母、数字及常用符号。请使用不含中文的 Steam 游戏库路径。");
-                if(new FileInfo(Path.Combine(root,@"platform\steam\PBZ.exe")).Length!=511072344) throw new IOException("游戏版本不匹配。当前仅支持 Steam build 26266538；已停止安装。");
+                GameCompatibility.Verify(Path.Combine(root,@"platform\steam\PBZ.exe"));
             }
             if(test && !root.StartsWith(Path.GetFullPath(Path.GetTempPath()),StringComparison.OrdinalIgnoreCase)) throw new IOException("测试只能使用系统临时目录。");
             return root;
@@ -117,7 +117,7 @@ namespace PBZL3Installer {
             if(File.Exists(cache) && new FileInfo(cache).Length<20*1024*1024) {var cached=File.ReadAllBytes(cache);if(Hash(cached)==LoaderHash)return cached;}
             log("从发布者 GitHub 下载适配的 UE4SS 加载器……");
             ServicePointManager.SecurityProtocol=SecurityProtocolType.Tls12;
-            var request=(HttpWebRequest)WebRequest.Create(LoaderUrl);request.Timeout=45000;request.ReadWriteTimeout=30000;request.UserAgent="PBZL3SprintInstaller/1.1";
+            var request=(HttpWebRequest)WebRequest.Create(LoaderUrl);request.Timeout=45000;request.ReadWriteTimeout=30000;request.UserAgent="PBZL3SprintInstaller/1.2";
             byte[] bytes;
             using(var response=(HttpWebResponse)request.GetResponse()) {
                 if(response.ResponseUri.Scheme!="https") throw new IOException("下载未使用 HTTPS，已停止。");
@@ -148,6 +148,13 @@ namespace PBZL3Installer {
             foreach(var path in new[]{target,library,modsFile,Path.Combine(platform,"dwmapi.dll")})Guard(root,path);
             foreach(var name in new[]{"PBZControllerCustomizer","PBZCommentPreset","PBZPS5R1TapHold","PBZSmartControls"}) if(Directory.Exists(Path.Combine(mods,name))) throw new IOException("检测到其他改键脚本："+name+"。请先停用并移出 Mods，避免两个脚本同时接管按键。");
             if(Directory.Exists(target)&&!IsOwn(target))throw new IOException("同名 Mod 不属于本安装器，未覆盖。");
+            byte[] settings=Resource("payload.settings.lua");
+            string previousSettings=Path.Combine(target,@"Scripts\settings.lua");
+            Guard(root,previousSettings);
+            if(File.Exists(previousSettings)) {
+                if(new FileInfo(previousSettings).Length>1024*1024)throw new IOException("已有配置超过大小限制，已停止更新。");
+                settings=File.ReadAllBytes(previousSettings);
+            }
             if(Directory.Exists(library)) {
                 if(!File.Exists(Path.Combine(library,"owner.txt"))||File.ReadAllText(Path.Combine(library,"owner.txt"))!=Owner)throw new IOException("依赖目录已存在且不属于本安装器，未覆盖。");
                 ReadBackendFolder(Path.Combine(library,@"PBZControllerCustomizer\Scripts"));
@@ -186,9 +193,10 @@ namespace PBZL3Installer {
                 if(test&&TestFailurePoint=="after-backup")throw new IOException("Injected rollback test");
                 modCreated=true;Directory.CreateDirectory(Path.Combine(target,"Scripts"));
                 File.WriteAllBytes(Path.Combine(target,@"Scripts\main.lua"),Resource("payload.main.lua"));
-                File.WriteAllBytes(Path.Combine(target,@"Scripts\settings.lua"),Resource("payload.settings.lua"));
+                File.WriteAllBytes(Path.Combine(target,@"Scripts\settings.lua"),settings);
+                File.WriteAllBytes(Path.Combine(target,@"Scripts\native_guard.lua"),Resource("payload.native_guard.lua"));
                 File.WriteAllText(Path.Combine(target,"enabled.txt"),"",Utf8);
-                File.WriteAllText(Path.Combine(target,"installer-receipt.json"),new JavaScriptSerializer().Serialize(new{owner=Owner,version="1.1.0",backend="PBZControllerCustomizer 2.1",backup=backup,sav_sha256=before,installed_at=DateTime.Now.ToString("o")}),Utf8);
+                File.WriteAllText(Path.Combine(target,"installer-receipt.json"),new JavaScriptSerializer().Serialize(new{owner=Owner,version="1.2.0",backend="PBZControllerCustomizer 2.1",backup=backup,sav_sha256=before,installed_at=DateTime.Now.ToString("o")}),Utf8);
                 Directory.CreateDirectory(mods);
                 string oldText=originalMods==null?"":Utf8.GetString(originalMods).TrimStart('\uFEFF');
                 string newText=Regex.Replace(oldText,@"(?m)^\s*PBZL3Sprint\s*:\s*[01]\s*\r?\n?","").TrimEnd()+"\r\nPBZL3Sprint : 1\r\n";
@@ -196,7 +204,8 @@ namespace PBZL3Installer {
                 if(!existingLoader){proxyCreated=true;File.WriteAllBytes(Path.Combine(platform,"dwmapi.dll"),loaderFiles["dwmapi.dll"]);}
                 CheckBackend(ReadBackendFolder(Path.Combine(library,@"PBZControllerCustomizer\Scripts")));
                 if(Hash(File.ReadAllBytes(Path.Combine(target,@"Scripts\main.lua")))!=Hash(Resource("payload.main.lua")))throw new IOException("Mod 复制校验失败。");
-                if(Hash(File.ReadAllBytes(Path.Combine(target,@"Scripts\settings.lua")))!=Hash(Resource("payload.settings.lua")))throw new IOException("配置复制校验失败。");
+                if(Hash(File.ReadAllBytes(Path.Combine(target,@"Scripts\settings.lua")))!=Hash(settings))throw new IOException("配置复制校验失败。");
+                if(Hash(File.ReadAllBytes(Path.Combine(target,@"Scripts\native_guard.lua")))!=Hash(Resource("payload.native_guard.lua")))throw new IOException("原生版本校验模块复制失败。");
                 if(before!=null&&Hash(File.ReadAllBytes(sav))!=before)throw new IOException("安装期间原键位发生变化，已撤销 Mod 安装。");
                 log("安装完成，原键位未改写。备份："+backup);return backup;
             } catch(Exception failure) {
@@ -248,7 +257,7 @@ namespace PBZL3Installer {
         readonly TextBox game=new TextBox(),dependency=new TextBox(),log=new TextBox();
         readonly Button install=new Button(),uninstall=new Button(),pickGame=new Button(),pickDependency=new Button(),download=new Button();
         public InstallerForm() {
-            Text="影之刃零 · 手柄键位安装器 1.1";ClientSize=new Size(740,570);MinimumSize=new Size(740,610);Font=new Font("Microsoft YaHei UI",9);StartPosition=FormStartPosition.CenterScreen;
+            Text="影之刃零 · 手柄键位安装器 1.2";ClientSize=new Size(740,570);MinimumSize=new Size(740,610);Font=new Font("Microsoft YaHei UI",9);StartPosition=FormStartPosition.CenterScreen;
             var title=new Label{Text="L3 冲刺 · R3 长按下蹲",Font=new Font(Font.FontFamily,19,FontStyle.Bold),AutoSize=true,Location=new Point(24,20)};Controls.Add(title);
             Controls.Add(new Label{Text="○ 闪避  ·  R1 处决  ·  × 交互\n按 L3 切换冲刺；R3 短按锁定，按住 0.5 秒切换下蹲。",AutoSize=true,Location=new Point(26,70)});
             Controls.Add(new Label{Text="游戏根目录（PBZ）",AutoSize=true,Location=new Point(26,127)});
@@ -257,7 +266,7 @@ namespace PBZL3Installer {
             Controls.Add(new Label{Text="框架完整 ZIP（已有兼容依赖时可留空）",AutoSize=true,Location=new Point(26,192)});
             dependency.SetBounds(26,216,468,28);pickDependency.Text="选择框架 ZIP";pickDependency.SetBounds(504,214,115,31);download.Text="作者下载页";download.SetBounds(629,214,85,31);
             Controls.AddRange(new Control[]{dependency,pickDependency,download});
-            Controls.Add(new Label{Text="支持 Steam build 26266538。缺少 UE4SS 时会从发布者 GitHub 下载并校验。\n框架需从作者页面下载 2.1 完整包；本安装器仅分发专用入口与配置。",AutoSize=true,Location=new Point(26,260)});
+            Controls.Add(new Label{Text="支持 Steam build 26266538 / 26367565；更新保留已有 Mod 配置。\n框架需使用已校验的 2.1 原件；缺少 UE4SS 时从发布者 GitHub 下载并校验。",AutoSize=true,Location=new Point(26,260)});
             install.Text="安装 / 更新";install.SetBounds(26,316,196,40);install.BackColor=Color.FromArgb(38,79,61);install.ForeColor=Color.White;install.FlatStyle=FlatStyle.Flat;
             uninstall.Text="卸载本 Mod";uninstall.SetBounds(236,316,150,40);
             Controls.AddRange(new Control[]{install,uninstall});

@@ -1,4 +1,4 @@
--- PBZL3Sprint 1.1.0. A distributable entry point for the unchanged
+-- PBZL3Sprint 1.2.0. A distributable entry point for the locally supplied
 -- PBZControllerCustomizer 2.1 native-input adapter by Sherkirito.
 -- Does not load the editor, bind F7, save input settings or emulate buttons.
 local dir = assert(debug.getinfo(1, "S").source:sub(2):match("^(.*[/\\])"))
@@ -40,7 +40,9 @@ local function checkPlan(plan)
         assert(keys[binding.action_name] == binding.key, "Unexpected binding: " .. binding.action_name)
         seen[binding.action_name] = true
     end
-    for name in pairs(keys) do assert(seen[name], "Missing binding: " .. name) end
+    for _,name in ipairs({"IA_SprintSwitch", "IA_Crouch", "IA_LockTarget"}) do
+        assert(seen[name], "Missing binding: " .. name)
+    end
     local modes = {IA_Sprint="off", IA_SprintSwitch="press", IA_Crouch="hold", IA_LockTarget="tap"}
     seen = {}
     for _,mode in ipairs(plan.modes) do
@@ -69,15 +71,25 @@ local function start()
     assert(cfg.mode == "apply" and cfg.active_controller == "dualsense", "Unexpected configuration profile")
     local plan = dofile(libraryDir .. "logic.lua").compile(cfg, dofile(libraryDir .. "catalog.lua"))
     checkPlan(plan)
-    -- Check exact executable bytes BEFORE the adapter can modify any mapping.
-    dofile(libraryDir .. "sprint_recovery.lua").verify(libraryDir .. "../../../../PBZ.exe")
+    -- Verify the native layout before the adapter can modify any mapping.
+    local guard = dofile(dir .. "native_guard.lua")
+    local build = guard.verify(libraryDir .. "../../../../PBZ.exe")
+    local repair = guard.adapter(dofile(libraryDir .. "sprint_recovery.lua"))
+    -- Give just this runtime its own dofile. Deferred callbacks keep this environment;
+    -- other mods and the shared global dofile are never changed.
+    local environment = setmetatable({dofile=function(path)
+        if path == libraryDir .. "sprint_recovery.lua" then return repair end
+        return dofile(path)
+    end}, {__index=_G, __newindex=_G})
+    local chunk = assert(load(readFile(libraryDir .. "runtime.lua"),
+        "@" .. libraryDir .. "runtime.lua", "t", environment))
     PBZ_CUSTOMIZER_HOT_CONFIG = cfg
-    local loaded, runtime = xpcall(function() return dofile(libraryDir .. "runtime.lua") end, debug.traceback)
+    local loaded, runtime = xpcall(chunk, debug.traceback)
     PBZ_CUSTOMIZER_HOT_CONFIG = nil
     assert(loaded, runtime)
     PBZ_L3_SPRINT_RUNTIME = runtime
-    log("v1.1.0 ready; waiting for a player pawn. L3=toggle sprint; R3 tap=lock, hold 0.50s=crouch.")
-    log("Existing SAV untouched; Circle=dodge, R1=execution, Cross=interaction.")
+    log("v1.2.0 ready; verified Steam build " .. build .. "; waiting for a player pawn.")
+    log("L3=toggle sprint; R3 tap=lock, hold 0.50s=crouch. Existing settings and SAV preserved.")
 end
 local ok, reason = xpcall(start, debug.traceback)
 if not ok then log("Startup stopped: " .. tostring(reason)) end

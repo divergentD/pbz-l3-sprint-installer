@@ -6,7 +6,9 @@ Windows controller-layout installer for **Phantom Blade Zero**. Press L3 to togg
 
 ![中文安装器界面](docs/installer-preview.png)
 
-> **当前支持范围：** Windows 64 位、Steam build **26266538**、Unreal Engine **5.7.4**。游戏路径须仅包含 ASCII 字符。框架原件需由使用者自行获取；这是联网引导安装器，不是包含全部依赖的离线整合包。
+> **1.2.0 支持范围：** Windows 64 位、Steam build **26266538 / 26367565**。游戏路径须仅包含 ASCII 字符。框架原件需由使用者自行获取；这是联网引导安装器，不是包含全部依赖的离线整合包。
+
+1.2.0 修复游戏更新后 `unsupported executable size` 导致 Mod 停止启动的问题。安装器和 Lua 启动入口会分别校验对应版本的四段原生冲刺代码；未知版本或代码不匹配时停止。**更新会逐字节保留已有 `settings.lua`**，包括 1.0 的三项移动键位配置，其他键位继续继承游戏存档。详见 [新版兼容核验](docs/COMPATIBILITY.md)。
 
 ## 键位
 
@@ -20,7 +22,7 @@ Windows controller-layout installer for **Phantom Blade Zero**. Press L3 to togg
 | 对应架势处决组合 | **L1 + R1** |
 | 跳跃／普通交互 | **× 叉键** |
 
-圆圈长按冲刺会关闭。其余攻击、道具、菜单与键盘设置继承原有配置。安装器不改写原生 `EnhancedInputUserSettings.sav`。
+圆圈长按冲刺会关闭。上表为首次安装的默认配置；更新时沿用现有 Mod 配置。其余攻击、道具、菜单与键盘设置继承原有配置。安装器不改写原生 `EnhancedInputUserSettings.sav`。
 
 ## 获取安装器
 
@@ -36,7 +38,7 @@ Windows controller-layout installer for **Phantom Blade Zero**. Press L3 to togg
 .\Package.ps1
 ```
 
-成品位于 `dist\PBZ-L3Sprint-OneClick-v1.1.0.zip`。构建要求与源码目录说明见下文。
+成品位于 `dist\PBZ-L3Sprint-OneClick-v1.2.0.zip`。构建要求与源码目录说明见下文。
 
 ## 首次安装
 
@@ -52,7 +54,7 @@ Windows controller-layout installer for **Phantom Blade Zero**. Press L3 to togg
 
 ## 更新、卸载与备份
 
-**更新：** 退出游戏后，在同一个安装器中再次点击“安装 / 更新”。安装器仅更新它识别的 PBZL3Sprint，不覆盖未知的同名 Mod。
+**更新：** 退出游戏后，在新版安装器中再次点击“安装 / 更新”。安装器仅更新它识别的 PBZL3Sprint，保留已有 `settings.lua`，并备份旧入口及原生键位文件。1.0 的本机依赖会迁移到专用依赖目录；已有受支持的 UE4SS 不需要重新下载。
 
 **卸载：** 退出游戏，打开安装器，确认游戏目录后点击“卸载本 Mod”。自有入口及依赖会被移至备份目录；共享 UE4SS 和其他 Mod 保持原样。
 
@@ -68,11 +70,11 @@ PBZL3SprintBackups/<时间戳>/
 
 | 组件 | 支持版本 | 获取方式 |
 | --- | --- | --- |
-| 游戏 | Steam build `26266538`，UE `5.7.4` | 使用者自己的游戏安装 |
+| 游戏 | Steam build `26266538` / `26367565`，四段原生代码均须匹配 | 使用者自己的游戏安装 |
 | PBZControllerCustomizer | **2.1 完整包** | 使用者从原作者下载，安装器按文件校验后读取 |
 | PBZ 适配版 UE4SS | `v3.0.1-1195-g1ceefac8` | 已安装的兼容版本，或安装器从发布者 GitHub 下载 |
 
-PBZControllerCustomizer 的框架源码及 UE4SS 二进制**未嵌入本仓库或安装器**。`source/VendorInfo.cs` 只保存文件名和校验值。
+PBZControllerCustomizer 的框架源码及 UE4SS 二进制**未嵌入本仓库或安装器**。`source/VendorInfo.cs` 只保存文件名和校验值。依赖仍固定为 **2.1**；原作者页面上更新的 2.3 等版本不属于本安装器的依赖范围，请使用指定的历史完整包，或沿用已经校验一致的本机 2.1。
 
 第三方框架有独立的再分发限制。这里发布的是我们编写的安装器、专用入口与配置，不重新发布受限框架。详情见 [第三方来源说明](docs/THIRD-PARTY.txt)。
 
@@ -91,12 +93,16 @@ source/
   Installer.cs       中文界面、Steam 检测、依赖校验及安装事务
   SelfTests.cs       模拟目录中的安装、更新、回滚与卸载检查
   VendorInfo.cs      固定依赖的文件名与 SHA-256
+  GameCompatibility.cs 安装前核验两个游戏版本的原生冲刺代码
 payload/
   main.lua           专用入口，从本机独立依赖目录载入适配器
   settings.lua       本项目的键位与触发方式配置
+  native_guard.lua   启动时核验代码，向本机适配器提供对应版本的校验器
 docs/
   THIRD-PARTY.txt    第三方来源和许可范围说明
   verification.json 既有验证记录及实际覆盖范围
+tests/
+  test_lua.py        双版本启动、原生保护、延迟加载及旧配置回归
 Build.ps1            构建安装器
 Package.ps1          生成可分享 ZIP、源码 ZIP 和校验文件
 LICENSE.txt          本项目自有代码的 MIT 许可
@@ -104,7 +110,7 @@ LICENSE.txt          本项目自有代码的 MIT 许可
 
 ## 测试与验证范围
 
-当前记录包含 **26 项安装流程检查**及 **5 项 Lua 检查**，并核对中文界面；见 [验证记录](docs/verification.json)。覆盖首次安装、重复更新、原键位备份、失败回滚、卸载保留其他 Mod、依赖校验和路径边界等场景。
+1.2.0 记录包含 **34 项安装流程检查**及 **17 项 Lua 检查**；见 [验证记录](docs/verification.json)。覆盖双版本校验、同大小错误代码拒绝、首次安装、重复更新、个人配置保留、原键位备份、失败回滚、卸载保留其他 Mod、依赖校验和路径边界等场景。新版 EXE 的原生代码已只读核验。
 
 可用安装器的测试入口复核安装流程：
 
@@ -114,7 +120,15 @@ LICENSE.txt          本项目自有代码的 MIT 许可
 
 路径含空格时请加双引号。测试所需框架和加载器原件须自行获取。测试在系统临时目录创建模拟游戏，不向真实游戏安装写入文件，也不联网。
 
-**离线检查不等于完整实机验收。** 1.1 分发版本尚未完成所有手柄、武器、关卡和游戏场景的实机测试；游戏更新也可能使固定映射或原生布局失效。
+Lua 回归可在装有 Python 3 和 `lupa==2.6` 的测试环境运行：
+
+```powershell
+python tests/test_lua.py C:\path\to\PBZControllerCustomizer\Scripts C:\path\to\PBZ\platform\steam\PBZ.exe
+```
+
+第二个路径可省略；提供时会额外只读核验当前 build 26367565 的真实 EXE。构建安装器本身不需要这些测试依赖。
+
+**离线检查不等于完整实机验收。** 尚未完成所有手柄、武器、关卡和游戏场景的实机测试；验证记录会明确区分代码核验、模拟运行与实际游戏映射。未来游戏更新仍需要重新核验。
 
 ## 常见问题
 
